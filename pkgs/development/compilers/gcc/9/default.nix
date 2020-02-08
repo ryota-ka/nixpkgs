@@ -43,7 +43,7 @@ with stdenv.lib;
 with builtins;
 
 let majorVersion = "9";
-    version = "${majorVersion}.2.0";
+    version = "${majorVersion}-20200201";
 
     inherit (stdenv) buildPlatform hostPlatform targetPlatform;
 
@@ -66,6 +66,12 @@ let majorVersion = "9";
     stageNameAddon = if crossStageStatic then "stage-static" else "stage-final";
     crossNameAddon = optionalString (targetPlatform != hostPlatform) "${targetPlatform.config}-${stageNameAddon}-";
 
+    # FIXME(ma27): temporary. See also https://gist.github.com/Ma27/36576faaecab3580e7d865ea23d98be0
+    gengtype-lex = fetchurl {
+      url = "https://gist.githubusercontent.com/Ma27/36576faaecab3580e7d865ea23d98be0/raw/3ef21501aaaba5d242568be011aed1396a4d1f70/gengtype-lex.c";
+      sha256 = "1r2ncllhngz7cg4745a9cm84aqh0g2r1s4ix1ri5j3rairnql60v";
+    };
+
 in
 
 stdenv.mkDerivation ({
@@ -75,8 +81,8 @@ stdenv.mkDerivation ({
   builder = ../builder.sh;
 
   src = fetchurl {
-    url = "mirror://gcc/releases/gcc-${version}/gcc-${version}.tar.xz";
-    sha256 = "01mj3yk7z49i49168hg2cg7qs4bsccrrnv7pjmbdlf8j2a7z0vpa";
+    url = "mirror://gcc/snapshots/${version}/gcc-${version}.tar.xz";
+    sha256 = "0fhamcyys9khklqwjgr0a5dzg6ajl26yhk8vcindr81ay7diwq6l";
   };
 
   inherit patches;
@@ -107,6 +113,8 @@ stdenv.mkDerivation ({
     for configureScript in $configureScripts; do
       patchShebangs $configureScript
     done
+
+    cp ${gengtype-lex} gcc/gengtype-lex.c
   '' + (
     if targetPlatform != hostPlatform || stdenv.cc.libc != null then
       # On NixOS, use the right path to the dynamic linker instead of
