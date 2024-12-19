@@ -1254,6 +1254,12 @@ rec {
         config.Env = lib.mapAttrsToList (name: value: "${name}=${value}") envVars;
       };
 
+  # Provide a temporary directory at `/tmp`
+  tmp = runCommand "tmp" { } ''
+    mkdir -p $out
+    mkdir -m 1777 $out/tmp
+  '';
+
   # Wrapper around streamNixShellImage to build an image from the result
   # Docs: doc/build-helpers/images/dockertools.section.md
   # Tests: nixos/tests/docker-tools-nix-shell.nix
